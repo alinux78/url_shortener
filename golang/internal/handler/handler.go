@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"log/slog"
 	"net/http"
 
 	"github.com/alinux78/ulrshortener/internal/service"
@@ -25,7 +24,6 @@ func NewURLShortener(svc service.URLShortener) *uRLShortener {
 }
 
 func (h *uRLShortener) Shorten(w http.ResponseWriter, r *http.Request) {
-	slog.Debug("shorten request")
 	var req urlShortenRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "invalid request", http.StatusBadRequest)

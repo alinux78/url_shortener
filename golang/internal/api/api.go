@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/alinux78/ulrshortener/internal/handler"
 	"github.com/alinux78/ulrshortener/internal/repository"
@@ -29,10 +30,20 @@ func Serve(port int, repo repository.Repository) {
 
 	r.Post("/shorten", handler.Shorten)
 	r.Post("/resolve", handler.Resolve)
-	http.Handle("/", r)
+	//http.Handle("/", r)
 
-	err := http.ListenAndServe((":" + strconv.Itoa(port)), nil)
+	loggingMiddleware := loggingMiddleware(r)
+
+	err := http.ListenAndServe((":" + strconv.Itoa(port)), loggingMiddleware)
 	if err != nil {
 		slog.Error("error starting server", slog.String("error", err.Error()))
 	}
+}
+
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		next.ServeHTTP(w, r)
+		slog.Debug("request", "method", r.Method, "path", r.RequestURI, "duration", time.Since(start))
+	})
 }
