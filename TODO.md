@@ -14,8 +14,8 @@ URL Shortener Project
 	Ensure that the generated short codes are unique and handle collisions if they occur.
 
 # API Endpoints:
-	Create an endpoint to accept a URL and return the shortened version.
-	Create an endpoint to redirect a short URL to the original URL.
+	[done - golang] Create an endpoint to accept a URL and return the shortened version.
+	[done - golang] Create an endpoint to redirect a short URL to the original URL.
 	OpenAPI
 
 # User Interface:
@@ -25,4 +25,8 @@ URL Shortener Project
 # Testing:
 	Write unit tests for your shortening logic and API endpoints.
 	Test the application thoroughly to ensure it handles edge cases and errors gracefully.
+
+
+# Bugs golang
+	- validate url
 

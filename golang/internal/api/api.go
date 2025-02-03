@@ -4,12 +4,11 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/alinux78/ulrshortener/internal/handler"
 	"github.com/alinux78/ulrshortener/internal/repository"
 	"github.com/alinux78/ulrshortener/internal/service"
-	"github.com/go-chi/chi/v5"
+	"github.com/gin-gonic/gin"
 )
 
 func Serve(port int, repo repository.Repository) {
@@ -17,33 +16,32 @@ func Serve(port int, repo repository.Repository) {
 	service := service.NewURLShortener(repo)
 	handler := handler.NewURLShortener(service)
 
-	// r := mux.NewRouter()
-	// r.HandleFunc("/shorten", handler.Shorten).Methods("POST")
-	// r.HandleFunc("/resolve", handler.Resolve).Methods("GET")
-	// http.Handle("/", r)
+	gin.SetMode(gin.ReleaseMode)
+	r := gin.New()
 
-	r := chi.NewRouter()
+	r.HandleMethodNotAllowed = true
 
-	r.MethodNotAllowed(func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	r.Use(gin.Logger())
+	r.Use(auth()) //TODO use gin.BasicAuth
+
+	r.POST("/shorten", func(c *gin.Context) {
+		handler.Shorten(c.Writer, c.Request)
+	})
+	r.POST("/resolve", func(c *gin.Context) {
+		handler.Resolve(c.Writer, c.Request)
 	})
 
-	r.Post("/shorten", handler.Shorten)
-	r.Post("/resolve", handler.Resolve)
-	//http.Handle("/", r)
+	middleware := r
 
-	loggingMiddleware := loggingMiddleware(r)
-
-	err := http.ListenAndServe((":" + strconv.Itoa(port)), loggingMiddleware)
+	err := http.ListenAndServe((":" + strconv.Itoa(port)), middleware)
 	if err != nil {
 		slog.Error("error starting server", slog.String("error", err.Error()))
 	}
 }
 
-func loggingMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		next.ServeHTTP(w, r)
-		slog.Debug("request", "method", r.Method, "path", r.RequestURI, "duration", time.Since(start))
-	})
+func auth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		slog.Debug("skip auth for request", "method", c.Request.Method, "path", c.Request.RequestURI)
+		c.Next()
+	}
 }
