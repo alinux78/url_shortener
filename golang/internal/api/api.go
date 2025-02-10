@@ -6,16 +6,12 @@ import (
 	"strconv"
 
 	"github.com/alinux78/ulrshortener/internal/handler"
-	"github.com/alinux78/ulrshortener/internal/repository"
-	"github.com/alinux78/ulrshortener/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
-func Serve(port int, repo repository.Repository) {
-	slog.Info("server started", slog.Int("port", port))
-	service := service.NewURLShortener(repo)
-	handler := handler.NewURLShortener(service)
+func Serve(port int) {
 
+	handler := handler.NewURLShortener()
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 
@@ -37,6 +33,8 @@ func Serve(port int, repo repository.Repository) {
 	if err != nil {
 		slog.Error("error starting server", slog.String("error", err.Error()))
 	}
+	slog.Info("server started", slog.Int("port", port))
+
 }
 
 func auth() gin.HandlerFunc {

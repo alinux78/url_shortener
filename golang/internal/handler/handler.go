@@ -1,14 +1,18 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
+	"log"
+	"log/slog"
 	"net/http"
+	"time"
 
-	"github.com/alinux78/ulrshortener/internal/service"
+	pb "github.com/alinux78/ulrshortener/internal/service/api/proto"
+	"google.golang.org/grpc"
 )
 
 type uRLShortener struct {
-	service service.URLShortener
 }
 
 type urlShortenRequest struct {
@@ -19,8 +23,25 @@ type urlShortenResponse struct {
 	ShortURL string `json:"short_url"`
 }
 
-func NewURLShortener(svc service.URLShortener) *uRLShortener {
-	return &uRLShortener{service: svc}
+var grpcClient pb.UrlShortenerServiceClient
+var grpcConn *grpc.ClientConn
+
+func initGrpcClient() {
+	grpcConn, err := grpc.Dial("localhost:50051", grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
+	//TODO close connection
+	grpcClient = pb.NewUrlShortenerServiceClient(grpcConn)
+}
+
+func NewURLShortener() *uRLShortener {
+	initGrpcClient()
+	return &uRLShortener{}
+}
+
+func (h *uRLShortener) Stop() {
+	grpcConn.Close()
 }
 
 func (h *uRLShortener) Shorten(w http.ResponseWriter, r *http.Request) {
@@ -29,14 +50,16 @@ func (h *uRLShortener) Shorten(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return
 	}
-
-	shortURL, err := h.service.Shorten(req.URL)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	grpcResp, err := grpcClient.Shorten(ctx, &pb.UrlShortenRequest{Url: req.URL})
 	if err != nil {
+		slog.Error("grpc error", slog.String("error", err.Error()))
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	resp := urlShortenResponse{ShortURL: shortURL}
+	resp := urlShortenResponse{ShortURL: grpcResp.ShortUrl}
 	json.NewEncoder(w).Encode(resp)
 }
 

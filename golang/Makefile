@@ -6,6 +6,11 @@ SRC_DIR=cmd/server
 # Default target
 all: build
 
+#build grpc
+protoc:
+	cd internal/service/api/proto/;protoc --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. service.proto;cd -
+
+
 # Build the binary
 build:
 	@echo "Building the binary..."
