@@ -6,6 +6,7 @@ option go_package = "internal/service/api/proto";
 
 service UrlShortenerService {
   rpc Shorten (UrlShortenRequest) returns (UrlShortenResponse);
+  rpc Resolve (UrlResolveRequest) returns (UrlResolveResponse);
 }
 
 message UrlShortenRequest {
@@ -15,3 +16,11 @@ message UrlShortenRequest {
 message UrlShortenResponse {
   string short_url = 1;
 }
+
+message UrlResolveRequest {
+  string short_url = 1;
+}
+message UrlResolveResponse {
+  string url = 1;
+}
+

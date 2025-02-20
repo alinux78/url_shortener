@@ -15,11 +15,11 @@ import (
 type uRLShortener struct {
 }
 
-type urlShortenRequest struct {
+type fullUrl struct {
 	URL string `json:"url"`
 }
 
-type urlShortenResponse struct {
+type shortenedUrl struct {
 	ShortURL string `json:"short_url"`
 }
 
@@ -45,7 +45,7 @@ func (h *uRLShortener) Stop() {
 }
 
 func (h *uRLShortener) Shorten(w http.ResponseWriter, r *http.Request) {
-	var req urlShortenRequest
+	var req fullUrl
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return
@@ -59,11 +59,29 @@ func (h *uRLShortener) Shorten(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := urlShortenResponse{ShortURL: grpcResp.ShortUrl}
+	resp := shortenedUrl{ShortURL: grpcResp.ShortUrl}
 	json.NewEncoder(w).Encode(resp)
 }
 
 func (h *uRLShortener) Resolve(w http.ResponseWriter, r *http.Request) {
-	//send not implemented
-	http.Error(w, "not implemented", http.StatusNotImplemented)
+	var req shortenedUrl
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	grpcResp, err := grpcClient.Resolve(ctx, &pb.UrlResolveRequest{ShortUrl: req.ShortURL})
+	if err != nil {
+		slog.Error("grpc error", slog.String("error", err.Error()))
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	if grpcResp.Url == "" {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+	resp := fullUrl{URL: grpcResp.Url}
+	json.NewEncoder(w).Encode(resp)
+
 }

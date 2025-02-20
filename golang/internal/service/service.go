@@ -30,11 +30,14 @@ func NewURLShortener(repo repository.Repository) URLShortener {
 
 func (s *uRLShortener) Shorten(url string) (string, error) {
 	sum := sha256.Sum256([]byte(url))
-	return base64.URLEncoding.EncodeToString(sum[:])[:6], nil
+	enc := base64.URLEncoding.EncodeToString(sum[:])[:6]
+	s.repo.Save(enc, url)
+	return enc, nil
 }
 
 func (s *uRLShortener) Resolve(url string) (string, error) {
-	return "", nil
+	url, _, err := s.repo.Load(url)
+	return url, err
 }
 
 type server struct {
@@ -48,6 +51,14 @@ func (s *server) Shorten(ctx context.Context, in *pb.UrlShortenRequest) (*pb.Url
 		return nil, err
 	}
 	return &pb.UrlShortenResponse{ShortUrl: enc}, nil
+}
+
+func (s *server) Resolve(ctx context.Context, in *pb.UrlResolveRequest) (*pb.UrlResolveResponse, error) {
+	enc, err := s.shortener.Resolve(in.ShortUrl)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.UrlResolveResponse{Url: enc}, nil
 }
 
 func Start(repo repository.Repository) {
