@@ -12,6 +12,10 @@ import (
 	"google.golang.org/grpc"
 )
 
+type UrlShortenerHadler interface {
+	Shorten(w http.ResponseWriter, r *http.Request)
+	Resolve(w http.ResponseWriter, r *http.Request)
+}
 type uRLShortener struct {
 }
 
@@ -35,7 +39,7 @@ func initGrpcClient() {
 	grpcClient = pb.NewUrlShortenerServiceClient(grpcConn)
 }
 
-func NewURLShortener() *uRLShortener {
+func NewURLShortener() UrlShortenerHadler {
 	initGrpcClient()
 	return &uRLShortener{}
 }

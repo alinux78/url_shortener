@@ -9,9 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Serve(port int) {
+func Serve(port int, handler handler.UrlShortenerHadler) {
 
-	handler := handler.NewURLShortener()
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 

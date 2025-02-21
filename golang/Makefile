@@ -32,8 +32,17 @@ fmt:
 	@echo "Formatting the code..."
 	@go fmt ./...
 
+# Generate mocks
+mocks:
+	@echo "Generating mocks..."
+	@mockery --all
+
+clean-mocks:
+	@echo "Cleaning mocks..."
+	@rm -rf mocks
+
 # Run tests
-test:
+test: mocks
 	@echo "Running tests..."
 	@go test ./...
 
@@ -42,6 +51,7 @@ lint:
 	@echo "Linting the code..."
 	@golangci-lint run
 
+	
 # Help message
 help:
 	@echo "Makefile commands:"
