@@ -26,6 +26,15 @@ func Serve(port int, handler handler.UrlShortenerHadler) {
 		handler.Resolve(c.Writer, c.Request)
 	})
 
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
+	r.GET("/:short_url", func(c *gin.Context) {
+		shortUrl := c.Param("short_url")
+		slog.Debug("redirecting", "short_url", shortUrl)
+		handler.Redirect(shortUrl, c.Writer, c.Request)
+	})
+
 	middleware := r
 
 	err := http.ListenAndServe((":" + strconv.Itoa(port)), middleware)
