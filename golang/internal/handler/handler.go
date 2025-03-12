@@ -11,6 +11,7 @@ import (
 
 	pb "github.com/alinux78/ulrshortener/internal/service/api/proto"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type UrlShortenerHadler interface {
@@ -33,7 +34,7 @@ var grpcClient pb.UrlShortenerServiceClient
 var grpcConn *grpc.ClientConn
 
 func initGrpcClient() {
-	grpcConn, err := grpc.Dial("localhost:50051", grpc.WithInsecure(), grpc.WithBlock())
+	grpcConn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
