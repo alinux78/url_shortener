@@ -12,7 +12,7 @@ import (
 func main() {
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 	port := 8080
-	repo := repository.NewInMemoryRepository()
+	repo := repository.NewSqliteRepository()
 
 	//API and service discuss via GRPC
 	go service.Start(repo)
