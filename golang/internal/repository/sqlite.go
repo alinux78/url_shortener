@@ -19,7 +19,6 @@ func NewSqliteRepository() Repository {
 		return nil
 	}
 
-	// Create a table
 	createTableSQL := `CREATE TABLE IF NOT EXISTS url (
         "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         "long_url" TEXT,

@@ -9,7 +9,7 @@ exclude_dir = ["assets", "tmp", "vendor"]
 delay = 1000
 stop_on_error = true
 [log]
-time = false
+time = true
 [color]
 main = "magenta"
 watcher = "cyan"
